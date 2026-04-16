@@ -1,25 +1,30 @@
 import { StrictMode } from 'react'
+import { useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
-import { RouterProvider, createRouter } from '@tanstack/react-router'
+import { RouterProvider } from '@tanstack/react-router'
 import './styles.css'
+import { useAuth } from './lib/auth'
+import { router } from './router'
+import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 
-// Import the generated route tree
-import { routeTree } from './routeTree.gen'
+const queryClient = new QueryClient();
 
-// Create a new router instance
-const router = createRouter({ routeTree })
+function AppRouter() {
+  const auth = useAuth()
 
-// Register the router instance for type safety
-declare module '@tanstack/react-router' {
-  interface Register {
-    router: typeof router
-  }
+  useEffect(() => {
+    void router.invalidate()
+  }, [auth.isAuthenticated])
+
+  return <RouterProvider router={router} context={{ auth }} />
 }
 
 const root = ReactDOM.createRoot(document.getElementById('root')!)
 
 root.render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <QueryClientProvider client={queryClient}>
+      <AppRouter />
+    </QueryClientProvider>
   </StrictMode>,
 )
